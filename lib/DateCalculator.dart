@@ -1,12 +1,12 @@
 class DateCalculator {
-  int calcDate(CalcableFormat to, {CalcableFormat? from}) {
-    DateTime fromDate = from != null ? DateTime(from.getYear(), from.getMonth(), from.getDay()) : DateTime.now();
+  int calcDate(DateCalculatorFormat to, DateCalculatorFormat from) {
+    DateTime fromDate = DateTime(from.getYear(), from.getMonth(), from.getDay());
     DateTime toDate = DateTime(to.getYear(), to.getMonth(), to.getDay());
     return toDate.difference(fromDate).inDays;
   }
 }
 
-abstract class CalcableFormat {
+abstract class DateCalculatorFormat {
   int getYear();
 
   int getMonth();

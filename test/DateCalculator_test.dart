@@ -14,7 +14,7 @@ void main() {
 
     const from = "2024-08-19";
     const to = "2024-08-20";
-    final dates = dateCalc.calcDate(from: TestDate.from(from), TestDate.from(to));
+    final dates = dateCalc.calcDate(TestDate.from(to), TestDate.from(from));
 
     expect(dates, 1);
   });
@@ -24,34 +24,34 @@ void main() {
 
     const from = "2024-08-18";
     const to = "2024-08-20";
-    final dates = dateCalc.calcDate(from: TestDate.from(from), TestDate.from(to));
+    final dates = dateCalc.calcDate(TestDate.from(to), TestDate.from(from));
 
     expect(dates, 2);
   });
 
-  test("같은날짜라면? 0이라고 리턴한다.", () {
+  test("같은날짜라면 0을 리턴한다.", () {
     final dateCalc = DateCalculator();
 
     const from = "2024-08-19";
     const to = "2024-08-19";
-    final dates = dateCalc.calcDate(from: TestDate.from(from), TestDate.from(to));
+    final dates = dateCalc.calcDate(TestDate.from(to), TestDate.from(from));
 
     expect(dates, 0);
   });
 
-  test("to의 날짜가 오늘보다 이전이라면 에러가 나을까 -1이 나을까, 이런경우 책임은 누구에게 있는가.", () {
+  test("to의 날짜가 오늘보다 이전이라면 -1을 리턴한다. 실제 계산이 되더라도 무조건 -1을 리턴한다.", () {
     final dateCalc = DateCalculator();
 
     const from = "2024-08-19";
     const to = "2023-08-19";
 
-    final dates = dateCalc.calcDate(from: TestDate.from(from), TestDate.from(to));
+    final dates = dateCalc.calcDate(TestDate.from(to), TestDate.from(from));
 
     expect(dates, lessThan(-1));
   });
 }
 
-class TestDate implements CalcableFormat {
+class TestDate implements DateCalculatorFormat {
   late final int _year;
   late final int _month;
   late final int _day;
