@@ -1,18 +1,27 @@
 class DateCalculator {
-  int calcDate(DateCalculatorFormat to, DateCalculatorFormat from) {
-    DateTime fromDate = DateTime(from.getYear(), from.getMonth(), from.getDay());
-    DateTime toDate = DateTime(to.getYear(), to.getMonth(), to.getDay());
+  late final Set<DateTime> _holidays;
 
-    if(toDate.weekday == DateTime.saturday) {
-      toDate = toDate.add(const Duration(days: 2));
-    } else if (toDate.weekday == DateTime.sunday) {
-      toDate = toDate.add(const Duration(days: 1));
+  DateCalculator(Set<DateCalculatorFormat> holidays) {
+    _holidays = holidays.map((format) => DateTime(format.getYear(), format.getMonth(), format.getDay())).toSet();
+  }
+
+  int calcDate(DateCalculatorFormat start, DateCalculatorFormat end) {
+    DateTime receiptDate = DateTime(start.getYear(), start.getMonth(), start.getDay());
+    DateTime maturityDate = DateTime(end.getYear(), end.getMonth(), end.getDay());
+
+    // 만기일이 주말이거나, 공휴일인 경우, 하루 더해준다.
+    while (_holidays.contains(maturityDate) || maturityDate.isWeekend) {
+      maturityDate = maturityDate.add(const Duration(days: 1));
     }
 
-    final range = toDate.difference(fromDate).inDays + 1; // 오늘 날짜 포함
+    final range = maturityDate.difference(receiptDate).inDays + 1; // 오늘 날짜 포함
     if (range <= 1) return throw UnsupportedError("Range is too short.");
     return range < 31 ? 31 : range;
   }
+}
+
+extension on DateTime {
+  bool get isWeekend => weekday == DateTime.saturday || weekday == DateTime.sunday;
 }
 
 abstract class DateCalculatorFormat {
