@@ -95,6 +95,15 @@ void main() {
 
     expect(dates, 64);
   });
+
+  test("Given 2024.01.01, 2024.03.01(삼일절, 공휴일), 기대값은 64일 이다. 공휴일 + 1, 토요일 + 1, 일요일 + 1", () {
+    const from = "2024-08-23";
+    const to = "2024-10-20";
+    //단순 계산으로는 61일 이다. 다음 평일은 3월 4일이 된다.
+    final dates = dateCalc.calcDate(TestDate.from(from), TestDate.from(to));
+
+    expect(dates, 64);
+  });
 }
 
 class TestDate implements DateCalculatorFormat {
