@@ -1,4 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
+import 'package:naranote/presentation/textfield_inputformatters.dart';
+
+import 'domain/model/date_calculator.dart';
+
+import 'domain/model/note_calculator.dart';
 
 void main() {
   runApp(const MyApp());
@@ -11,42 +18,18 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: '나래 어음',
       theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const MyHomePage(title: '나래 어음'),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
 
   final String title;
 
@@ -55,71 +38,187 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+  int _dates = 0;
+  String _resultMsg = "";
 
-  void _incrementCounter() {
+  final startDateField = TextEditingController();
+  final endDateField = TextEditingController();
+  final principalField = TextEditingController();
+  final rateField = TextEditingController();
+  final chargeField = TextEditingController(text: '4000');
+
+  late final holidays = {Holiday.from("2024-08-15"), Holiday.from("2024-03-01")};
+  late final DateCalculator dateCalc = DateCalculator(holidays);
+
+  FocusNode initFocusNode = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      FocusScope.of(context).requestFocus(initFocusNode);
+    });
+  }
+
+  @override
+  void dispose() {
+    startDateField.dispose();
+    endDateField.dispose();
+    initFocusNode.dispose();
+    super.dispose();
+  }
+
+  void _calcDates() {
+    // const from = "2024-08-19";
+    // const to = "2024-10-04";
+    // 31
+    final from = startDateField.text.trim();
+    final end = endDateField.text.trim();
+    final dates = dateCalc.calcDate(NoteDate.from(from), NoteDate.from(end));
+
     setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
+      _dates = dates;
+    });
+  }
+
+  void _printReceipt(){
+    final principal = principalField.text;
+    final rate = rateField.text;
+    final charge = chargeField.text;
+    final endDate = NoteDate.from(endDateField.text);
+    final jigeupil = "${endDate.getYear().toString().substring(2, 4)}.${endDate.getMonth()}.${endDate.getDay()}";
+
+    final calculator = NoteCalculator();
+    final result = calculator.calc(int.parse(principal.replaceAll(',', '')), _dates, double.parse(rate), int.parse(charge));
+    final interest = calculator.calcInterest(int.parse(principal.replaceAll(',', '')), _dates, double.parse(rate));
+
+    final NumberFormat formatter = NumberFormat('#,###');
+
+    final msg = "금    액: $principal\n"
+        "지급일: $jigeupil\n"
+        "일    수: $_dates일\n"
+        "이    율: $rate%\n"
+        "이    자: ${formatter.format(interest)}\n"
+        "수수료: ${formatter.format(int.parse(charge))}\n"
+        "송금액: ${formatter.format(result)}\n";
+
+    Clipboard.setData(ClipboardData(text: _resultMsg)).then((_) {
+      // 복사가 완료된 후 사용자에게 알림을 표시
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('클립보드에 복사됨')),
+      );
+    });
+
+    setState(() {
+      _resultMsg = msg;;
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
       appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
         title: Text(widget.title),
       ),
       body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              'You have pushed the button this many times:',
-            ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-          ],
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                      child: TextField(
+                    focusNode: initFocusNode,
+                    decoration: const InputDecoration(border: OutlineInputBorder(), labelText: '시작일'),
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly, // 숫자만 입력받도록 제한
+                    ],
+                    controller: startDateField,
+                  )),
+                  const SizedBox(
+                    width: 10.0,
+                  ),
+                  Expanded(
+                      child: TextField(
+                    decoration: const InputDecoration(border: OutlineInputBorder(), labelText: '지급일'),
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly, // 숫자만 입력받도록 제한
+                    ],
+                    controller: endDateField,
+                    onSubmitted: (value) {
+                      _calcDates();
+                    },
+                  )),
+                  const SizedBox(
+                    width: 10,
+                  ),
+                  ElevatedButton(onPressed: _calcDates, child: const Text('날짜 계산')),
+                ],
+              ),
+              const SizedBox(
+                height: 10,
+              ),
+              Text(
+                '날 수: $_dates',
+                style: Theme.of(context).textTheme.headlineMedium,
+              ),
+              const SizedBox(
+                height: 10,
+              ),
+              TextField(
+                  controller: principalField,
+                  decoration: const InputDecoration(border: OutlineInputBorder(), labelText: '금액'),
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly, // 숫자만 입력받도록 제한
+                    ThousandsSeparatorInputFormatter(), // 천 단위로 , 추가
+                  ]),
+
+              const SizedBox(
+                height: 10,
+              ),
+              TextField(
+                  controller: rateField,
+                  decoration: const InputDecoration(border: OutlineInputBorder(), labelText: '이율'),
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  onSubmitted: (value){
+                    _printReceipt();
+                  },
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')), // 숫자와 .만 허용
+                    DecimalTextInputFormatter(),
+                  ]),
+              const SizedBox(
+                height: 10,
+              ),
+              TextField(
+                  controller: chargeField,
+                  decoration: const InputDecoration(border: OutlineInputBorder(), labelText: '수수료'),
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly, // 숫자만 입력받도록 제한
+                  ]),
+              const SizedBox(
+                height: 10,
+              ),
+              ElevatedButton(onPressed: (){_printReceipt();}, child: const Text("영수증 발행")),
+              const SizedBox(
+                height: 10,
+              ),
+              Text(_resultMsg)
+            ],
+          ),
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+      // floatingActionButton: FloatingActionButton(
+      //   onPressed: _calcDates,
+      //   tooltip: 'Increment',
+      //   child: const Icon(Icons.add),
+      // ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }

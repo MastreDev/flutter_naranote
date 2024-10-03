@@ -10,4 +10,8 @@ class NoteCalculator {
     return principal - interest.round() - charge;
   }
 
+  calcInterest(int principal, int range, double ratio) {
+    return principal / 30 * range * ratio / 100;
+  }
+
 }
