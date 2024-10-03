@@ -24,7 +24,6 @@ void main() {
         .where((ele) => ele != null)
         .map((locdate) => {Holiday(locdate!)});
 
-    print(holidays);
     expect(statusCode, 200);
   });
 }

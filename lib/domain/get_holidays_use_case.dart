@@ -1,4 +1,4 @@
-import 'package:naranote/UseCase.dart';
+import 'package:naranote/domain/usecase/use_case.dart';
 
 class GetHolidaysUseCase implements UseCase<GetHolidayParam, GetHolidayResult> {
   @override

@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:naranote/DateCalculator.dart';
-import 'package:naranote/NoteCalculator.dart';
+import 'package:naranote/domain/model/date_calculator.dart';
+import 'package:naranote/domain/model/note_calculator.dart';
 
-import 'DateCalculator_test.dart';
+import 'domain/model/date_calculator_test.dart';
 
 void main() {
   final holidays = {TestDate.from("2024-08-15"), TestDate.from("2024-03-01")};
