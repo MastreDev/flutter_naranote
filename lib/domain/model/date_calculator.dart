@@ -14,9 +14,7 @@ class DateCalculator {
       maturityDate = maturityDate.add(const Duration(days: 1));
     }
 
-    final range = maturityDate
-        .difference(receiptDate)
-        .inDays + 1; // 오늘 날짜 포함
+    final range = maturityDate.difference(receiptDate).inDays + 1; // 오늘 날짜 포함
     if (range <= 1) return throw UnsupportedError("Range is too short.");
     return range < 31 ? 31 : range;
   }
@@ -41,9 +39,9 @@ class NoteDate implements DateCalculatorFormat {
 
   // raw -> yyyyddmm
   NoteDate.from(String raw) {
-    _year = int.parse(raw.substring(0,4));
-    _month = int.parse(raw.substring(4,6));
-    _day = int.parse(raw.substring(6,8));
+    _year = int.parse(raw.substring(0, 4));
+    _month = int.parse(raw.substring(4, 6));
+    _day = int.parse(raw.substring(6, 8));
   }
 
   @override
@@ -63,16 +61,24 @@ class NoteDate implements DateCalculatorFormat {
 }
 
 class Holiday implements DateCalculatorFormat {
+  late final String _raw;
   late final int _year;
   late final int _month;
   late final int _day;
 
   // raw -> yyyyddmm
   Holiday.from(String raw) {
-    final split = raw.split("-");
-    _year = int.parse(split[0]);
-    _month = int.parse(split[1]);
-    _day = int.parse(split[2]);
+    _raw = raw;
+    if (raw.contains("-")) {
+      final split = raw.split("-");
+      _year = int.parse(split[0]);
+      _month = int.parse(split[1]);
+      _day = int.parse(split[2]);
+    } else {
+      _year = int.parse(raw.substring(0, 4));
+      _month = int.parse(raw.substring(4, 6));
+      _day = int.parse(raw.substring(6, 8));
+    }
   }
 
   @override
@@ -88,5 +94,9 @@ class Holiday implements DateCalculatorFormat {
   @override
   int getYear() {
     return _year;
+  }
+
+  String getRaw() {
+    return _raw;
   }
 }
