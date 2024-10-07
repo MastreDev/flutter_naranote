@@ -65,6 +65,9 @@ class _MyHomePageState extends State<MyHomePage> {
     startDateField.dispose();
     endDateField.dispose();
     initFocusNode.dispose();
+    principalField.dispose();
+    rateField.dispose();
+    chargeField.dispose();
     super.dispose();
   }
 
