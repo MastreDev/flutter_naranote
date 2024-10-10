@@ -35,3 +35,22 @@ class ThousandsSeparatorInputFormatter extends TextInputFormatter {
     );
   }
 }
+
+class DateInputFormatter extends TextInputFormatter {
+
+  @override
+  TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
+    String cleanedText = newValue.text.replaceAll(".", "");
+    if (cleanedText.length >= 5) {
+      cleanedText = '${cleanedText.substring(0, 4)}.${cleanedText.substring(4)}';
+    }
+    if (cleanedText.length >= 8) {
+      cleanedText = '${cleanedText.substring(0, 7)}.${cleanedText.substring(7)}';
+    }
+
+    return newValue.copyWith(
+      text: cleanedText,
+      selection: TextSelection.collapsed(offset: cleanedText.length), // 커서를 끝으로 이동
+    );
+  }
+}

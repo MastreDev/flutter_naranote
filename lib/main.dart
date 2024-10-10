@@ -71,8 +71,8 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void _reactiveCalculate() {
-    final from = startDateField.text.trim();
-    final end = endDateField.text.trim();
+    final from = startDateField.text.trim().replaceAll(".", "");
+    final end = endDateField.text.trim().replaceAll(".", "");
 
     if (!RegExp(r'^\d{8}$').hasMatch(from)) {
       return;
@@ -82,7 +82,7 @@ class _MyHomePageState extends State<MyHomePage> {
       return;
     }
 
-    final endDate = NoteDate.from(endDateField.text);
+    final endDate = NoteDate.from(end);
     final dates = dateCalc.calcDate(NoteDate.from(from), endDate);
     setState(() {
       _dates = dates;
@@ -91,7 +91,7 @@ class _MyHomePageState extends State<MyHomePage> {
     final principal = principalField.text;
     final rate = rateField.text;
     final charge = chargeField.text;
-    final paymentDay = "${endDate.getYear().toString().substring(2, 4)}.${endDate.getMonth()}.${endDate.getDay()}";
+    final paymentDay = endDateField.text.trim().substring(2);
 
     if (!RegExp(r'^\d+\.\d+$').hasMatch(rate)) {
       setState(() {
@@ -139,6 +139,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     keyboardType: TextInputType.number,
                     inputFormatters: [
                       FilteringTextInputFormatter.digitsOnly, // 숫자만 입력받도록 제한
+                      DateInputFormatter()
                     ],
                     controller: startDateField,
                     onChanged: (value) {
@@ -154,6 +155,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     keyboardType: TextInputType.number,
                     inputFormatters: [
                       FilteringTextInputFormatter.digitsOnly, // 숫자만 입력받도록 제한
+                      DateInputFormatter()
                     ],
                     controller: endDateField,
                     onChanged: (value) {
@@ -213,15 +215,12 @@ class _MyHomePageState extends State<MyHomePage> {
               const SizedBox(
                 height: 10,
               ),
+              Text(_resultMsg),
               ElevatedButton(
                   onPressed: () {
                     _reactiveCalculate();
                   },
                   child: const Text("영수증 발행")),
-              const SizedBox(
-                height: 10,
-              ),
-              Text(_resultMsg)
             ],
           ),
         ),
