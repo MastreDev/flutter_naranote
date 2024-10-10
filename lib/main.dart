@@ -4,7 +4,6 @@ import 'package:intl/intl.dart';
 import 'package:naranote/presentation/textfield_inputformatters.dart';
 
 import 'domain/model/date_calculator.dart';
-
 import 'domain/model/note_calculator.dart';
 
 void main() {
@@ -71,49 +70,51 @@ class _MyHomePageState extends State<MyHomePage> {
     super.dispose();
   }
 
-  void _calcDates() {
-    // const from = "2024-08-19";
-    // const to = "2024-10-04";
-    // 31
+  void _reactiveCalculate() {
     final from = startDateField.text.trim();
     final end = endDateField.text.trim();
-    final dates = dateCalc.calcDate(NoteDate.from(from), NoteDate.from(end));
 
+    if (!RegExp(r'^\d{8}$').hasMatch(from)) {
+      return;
+    }
+
+    if (!RegExp(r'^\d{8}$').hasMatch(end)) {
+      return;
+    }
+
+    final endDate = NoteDate.from(endDateField.text);
+    final dates = dateCalc.calcDate(NoteDate.from(from), endDate);
     setState(() {
       _dates = dates;
     });
-  }
 
-  void _printReceipt(){
     final principal = principalField.text;
     final rate = rateField.text;
     final charge = chargeField.text;
-    final endDate = NoteDate.from(endDateField.text);
-    final jigeupil = "${endDate.getYear().toString().substring(2, 4)}.${endDate.getMonth()}.${endDate.getDay()}";
+    final paymentDay = "${endDate.getYear().toString().substring(2, 4)}.${endDate.getMonth()}.${endDate.getDay()}";
+
+    if (!RegExp(r'^\d+\.\d+$').hasMatch(rate)) {
+      setState(() {
+        _resultMsg = '';
+      });
+      return;
+    }
 
     final calculator = NoteCalculator();
     final result = calculator.calc(int.parse(principal.replaceAll(',', '')), _dates, double.parse(rate), int.parse(charge));
     final interest = calculator.calcInterest(int.parse(principal.replaceAll(',', '')), _dates, double.parse(rate));
-
     final NumberFormat formatter = NumberFormat('#,###');
 
     final msg = "금    액: $principal\n"
-        "지급일: $jigeupil\n"
+        "지급일: $paymentDay\n"
         "일    수: $_dates일\n"
         "이    율: $rate%\n"
         "이    자: ${formatter.format(interest)}\n"
         "수수료: ${formatter.format(int.parse(charge))}\n"
         "송금액: ${formatter.format(result)}\n";
 
-    Clipboard.setData(ClipboardData(text: _resultMsg)).then((_) {
-      // 복사가 완료된 후 사용자에게 알림을 표시
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('클립보드에 복사됨')),
-      );
-    });
-
     setState(() {
-      _resultMsg = msg;;
+      _resultMsg = msg;
     });
   }
 
@@ -140,6 +141,9 @@ class _MyHomePageState extends State<MyHomePage> {
                       FilteringTextInputFormatter.digitsOnly, // 숫자만 입력받도록 제한
                     ],
                     controller: startDateField,
+                    onChanged: (value) {
+                      _reactiveCalculate();
+                    },
                   )),
                   const SizedBox(
                     width: 10.0,
@@ -152,14 +156,10 @@ class _MyHomePageState extends State<MyHomePage> {
                       FilteringTextInputFormatter.digitsOnly, // 숫자만 입력받도록 제한
                     ],
                     controller: endDateField,
-                    onSubmitted: (value) {
-                      _calcDates();
+                    onChanged: (value) {
+                      _reactiveCalculate();
                     },
                   )),
-                  const SizedBox(
-                    width: 10,
-                  ),
-                  ElevatedButton(onPressed: _calcDates, child: const Text('날짜 계산')),
                 ],
               ),
               const SizedBox(
@@ -176,11 +176,13 @@ class _MyHomePageState extends State<MyHomePage> {
                   controller: principalField,
                   decoration: const InputDecoration(border: OutlineInputBorder(), labelText: '금액'),
                   keyboardType: TextInputType.number,
+                  onChanged: (value) {
+                    _reactiveCalculate();
+                  },
                   inputFormatters: [
                     FilteringTextInputFormatter.digitsOnly, // 숫자만 입력받도록 제한
                     ThousandsSeparatorInputFormatter(), // 천 단위로 , 추가
                   ]),
-
               const SizedBox(
                 height: 10,
               ),
@@ -188,8 +190,8 @@ class _MyHomePageState extends State<MyHomePage> {
                   controller: rateField,
                   decoration: const InputDecoration(border: OutlineInputBorder(), labelText: '이율'),
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  onSubmitted: (value){
-                    _printReceipt();
+                  onChanged: (value) {
+                    _reactiveCalculate();
                   },
                   inputFormatters: [
                     FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')), // 숫자와 .만 허용
@@ -202,13 +204,20 @@ class _MyHomePageState extends State<MyHomePage> {
                   controller: chargeField,
                   decoration: const InputDecoration(border: OutlineInputBorder(), labelText: '수수료'),
                   keyboardType: TextInputType.number,
+                  onChanged: (value) {
+                    _reactiveCalculate();
+                  },
                   inputFormatters: [
                     FilteringTextInputFormatter.digitsOnly, // 숫자만 입력받도록 제한
                   ]),
               const SizedBox(
                 height: 10,
               ),
-              ElevatedButton(onPressed: (){_printReceipt();}, child: const Text("영수증 발행")),
+              ElevatedButton(
+                  onPressed: () {
+                    _reactiveCalculate();
+                  },
+                  child: const Text("영수증 발행")),
               const SizedBox(
                 height: 10,
               ),
