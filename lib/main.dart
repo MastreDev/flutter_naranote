@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
-import 'package:naranote/presentation/textfield_inputformatters.dart';
 
 import 'domain/model/date_calculator.dart';
 import 'domain/model/note_calculator.dart';
+import 'presentation/icons_icons.dart';
+import 'presentation/textfield_inputformatters.dart';
+import 'presentation/theme.dart';
+import 'presentation/util.dart';
 
 void main() {
   runApp(const MyApp());
@@ -16,12 +19,14 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
+    TextTheme textTheme = createTextTheme(context, "Noto Serif", "Noto Sans");
+
+    MaterialTheme theme = MaterialTheme(textTheme);
+
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: '나래 어음',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
-      ),
+      theme: theme.light(),
       home: const MyHomePage(title: '나래 어음'),
     );
   }
@@ -118,12 +123,41 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+  void _printReceipt() {
+    _reactiveCalculate();
+    if (_resultMsg.isEmpty) return;
+    Clipboard.setData(ClipboardData(text: _resultMsg)).then((_) {
+      // 복사가 완료된 후 사용자에게 알림을 표시
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('클립보드에 복사됨')),
+      );
+    });
+  }
+
+  void _clear() {
+    startDateField.clear();
+    endDateField.clear();
+    principalField.clear();
+    rateField.clear();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      FocusScope.of(context).requestFocus(initFocusNode);
+    });
+
+    chargeField.text = '4000';
+    setState(() {
+      _resultMsg = '';
+      _dates = 0;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: Text(widget.title),
+        actions: [IconButton(onPressed: _printReceipt, icon: const Icon(NaraIcons.print))],
       ),
       body: Center(
         child: Padding(
@@ -216,20 +250,15 @@ class _MyHomePageState extends State<MyHomePage> {
                 height: 10,
               ),
               Text(_resultMsg),
-              ElevatedButton(
-                  onPressed: () {
-                    _reactiveCalculate();
-                  },
-                  child: const Text("영수증 발행")),
             ],
           ),
         ),
       ),
-      // floatingActionButton: FloatingActionButton(
-      //   onPressed: _calcDates,
-      //   tooltip: 'Increment',
-      //   child: const Icon(Icons.add),
-      // ), // This trailing comma makes auto-formatting nicer for build methods.
+      floatingActionButton: FloatingActionButton(
+        onPressed: _clear,
+        tooltip: 'Clear',
+        child: const Icon(NaraIcons.doc_new),
+      ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }
